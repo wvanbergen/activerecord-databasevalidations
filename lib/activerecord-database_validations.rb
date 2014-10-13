@@ -1,1 +1,1 @@
-require 'activerecord/database_validations'
+require 'ActiveRecord/database_validations'

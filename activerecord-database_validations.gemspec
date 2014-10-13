@@ -5,7 +5,7 @@ require 'activerecord/database_validations/version'
 
 Gem::Specification.new do |spec|
   spec.name          = "activerecord-database_validations"
-  spec.version       = Activerecord::DatabaseValidations::VERSION
+  spec.version       = ActiveRecord::DatabaseValidations::VERSION
   spec.authors       = ["Willem van Bergen"]
   spec.email         = ["willem@railsdoctors.com"]
   spec.summary       = %q{Add validations to your ActiveRecord models based on your database constraints.}
@@ -23,4 +23,5 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency "bundler", "~> 1.5"
   spec.add_development_dependency "rake"
   spec.add_development_dependency "minitest", "~> 5"
+  spec.add_development_dependency "sqlite3"
 end
