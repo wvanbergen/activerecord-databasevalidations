@@ -1,5 +1,4 @@
 require "active_record"
-require "pry"
 require "activerecord/database_validations/version"
 
 module ActiveRecord

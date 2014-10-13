@@ -1,0 +1,15 @@
+language: ruby 
+
+rvm: 
+- 1.9.3
+- 2.0.0
+- 2.1.3
+
+env:
+- DATABASE_ADAPTER=sqlite3
+- DATABASE_ADAPTER=mysql2
+- DATABASE_ADAPTER=postgresql
+
+before_script:
+- mysql -e 'create database database_validations;'
+- psql -c 'create database database_validations;' -U postgres
