@@ -1,4 +1,4 @@
-# Activerecord::DatabaseValidations
+# ActiveRecord::DatabaseValidations
 
 Add validations to your ActiveRecord models based on your database constraints.
 
@@ -6,7 +6,7 @@ Add validations to your ActiveRecord models based on your database constraints.
 
 Add this line to your application's Gemfile:
 
-    gem 'activerecord-database_validations'
+    gem 'activerecord-databasevalidations'
 
 And then execute:
 
@@ -14,7 +14,7 @@ And then execute:
 
 Or install it yourself as:
 
-    $ gem install activerecord-database_validations
+    $ gem install activerecord-databasevalidations
 
 ## Usage
 
@@ -24,6 +24,7 @@ to validate based on the database constraints.
 ``` ruby
 class Foo < ActiveRecord::Base
   validates :string_field, :boolean_field, database_constraints: true
+  validates :string_field, database_constraints: { constraints: [:size, :not_null] }
 end
 ```
 
@@ -35,14 +36,9 @@ class Bar < ActiveRecord::Base
 end
 ```
 
-Validations will be added in these cases:
-
-- For textual fields that have a limit, a `LengthValidator` will be added.
-- For NOT NULL fields, a `PresenceValidator` will be added.
-
 ## Contributing
 
-1. Fork it ( http://github.com/wvanbergen/activerecord-database_validations/fork )
+1. Fork it ( http://github.com/wvanbergen/activerecord-databasevalidations/fork )
 2. Create your feature branch (`git checkout -b my-new-feature`)
 3. Commit your changes (`git commit -am 'Add some feature'`)
 4. Push to the branch (`git push origin my-new-feature`)

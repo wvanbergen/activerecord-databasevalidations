@@ -4,7 +4,7 @@ $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
 require 'active_record/database_validations/version'
 
 Gem::Specification.new do |spec|
-  spec.name          = "activerecord-database_validations"
+  spec.name          = "activerecord-databasevalidations"
   spec.version       = ActiveRecord::DatabaseValidations::VERSION
   spec.authors       = ["Willem van Bergen"]
   spec.email         = ["willem@railsdoctors.com"]

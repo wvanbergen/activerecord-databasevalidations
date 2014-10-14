@@ -7,7 +7,7 @@ require "minitest/pride"
 
 require "yaml"
 
-require "activerecord/database_validations"
+require "active_record/database_validations"
 
 database_yml = YAML.load_file(File.expand_path('../database.yml', __FILE__))
 ActiveRecord::Base.establish_connection(database_yml['test'])
