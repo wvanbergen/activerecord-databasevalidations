@@ -4,5 +4,5 @@ en:
     # The value :count is available when applicable. Can be used for pluralization.
     messages:
       too_many_bytes: "is too long (maximum is %{count} bytes)"
-      characters_outside_basic_multilingual_plane: "contains characters outside Unicode's basic multilingual plane (codepoints larger than 0xFFFF)"
+      characters_outside_basic_multilingual_plane: "contains characters outside Unicode's basic multilingual plane"
       must_be_set: "must be set"

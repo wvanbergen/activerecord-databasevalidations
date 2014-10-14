@@ -23,7 +23,7 @@ class BasicMultilingualPlaneValidatorTest < Minitest::Test
   def test_emoji
     @model.unicode = '💩'
     assert @model.invalid?
-    assert_equal ["contains characters outside Unicode's basic multilingual plane (codepoints larger than 0xFFFF)"], @model.errors[:unicode]
+    assert_equal ["contains characters outside Unicode's basic multilingual plane"], @model.errors[:unicode]
   end
 
   def test_nil

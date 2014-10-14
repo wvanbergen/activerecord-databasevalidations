@@ -5,8 +5,6 @@ require 'active_model/validations/basic_multilingual_plane'
 module ActiveRecord
   module Validations
     class DatabaseConstraintsValidator < ActiveModel::EachValidator
-      attr_reader :klass
-
       TYPE_LIMITS = {
         char:       { validator: ActiveModel::Validations::LengthValidator },
         varchar:    { validator: ActiveModel::Validations::LengthValidator },
@@ -23,8 +21,13 @@ module ActiveRecord
         longblob:   { validator: ActiveModel::Validations::BytesizeValidator, default_maximum: 2 ** 32 - 1 },
       }
 
+      DEFAULT_CONSTRAINT_VALIDATORS = Set[:size, :not_null]
+
+      attr_reader :klass, :constraints
+
       def initialize(options = {})
         @klass = options[:class]
+        @constraints = options.delete(:constraints) || DEFAULT_CONSTRAINT_VALIDATORS
         @constraint_validators = {}
         super
       end
@@ -34,11 +37,11 @@ module ActiveRecord
           validators = []
           column = klass.columns_hash[attribute.to_s] or raise "Model #{self.class.name} does not have column #{column_name}!"
 
-          if !column.null
-            validators << ActiveRecord::Validations::PresenceValidator.new(attributes: [attribute], class: klass)
+          if constraints.include?(:not_null) && !column.null
+            validators << ActiveModel::Validations::NotNullValidator.new(attributes: [attribute], class: klass)
           end
 
-          if column.text? || column.binary?
+          if constraints.include?(:size) && (column.text? || column.binary?)
             column_type     = column.sql_type.sub(/\(.*\z/, '').gsub(/\s/, '_').to_sym
             type_limit      = TYPE_LIMITS.fetch(column_type, {})
             validator_class = type_limit[:validator]
@@ -47,6 +50,10 @@ module ActiveRecord
             if validator_class && maximum
               validators << validator_class.new(attributes: [attribute], class: klass, maximum: maximum)
             end
+          end
+
+          if constraints.include?(:basic_multilingual_plane) && column.text?
+            validators << ActiveModel::Validations::BasicMultilingualPlaneValidator.new(attributes: [attribute], class: klass, maximum: maximum)
           end
 
           validators
