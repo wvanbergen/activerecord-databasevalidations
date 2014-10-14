@@ -31,6 +31,7 @@ module ActiveRecord
 
       def initialize(options = {})
         @klass = options[:class]
+        options[:constraints] = Array.wrap(options.delete(:constraint)) if options.key?(:constraint)
         @constraints = options.delete(:constraints) || :default
         @constraints = CONSTRAINT_VALIDATORS_SETS[@constraints] if CONSTRAINT_VALIDATORS_SETS.key?(@constraints)
         @constraint_validators = {}

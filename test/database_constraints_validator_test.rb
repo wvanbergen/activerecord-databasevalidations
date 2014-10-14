@@ -19,7 +19,8 @@ ActiveRecord::Migration.suppress_messages do
 end
 
 class Foo < ActiveRecord::Base
-  validates :string, :tinytext, :varbinary, :blob, :checked, database_constraints: true
+  validates :string, :tinytext, :varbinary, :blob, database_constraints: true
+  validates :checked, database_constraints: { constraint: :not_null }
   validates :not_null_text, database_constraints: { constraints: [:size, :basic_multilingual_plane] }
 end
 
@@ -39,7 +40,7 @@ class DatabaseConstraintsValidatorTest < Minitest::Test
     assert_equal [], Foo._validators[:unchecked]
   end
 
-  def test_not_null_field_defines_not_null_validator_by_default
+  def test_not_null_field_defines_not_null_validator_if_requested
     validator = Foo._validators[:checked].first
     subvalidators = validator.attribute_validators(:checked)
     assert_equal 1, subvalidators.length
