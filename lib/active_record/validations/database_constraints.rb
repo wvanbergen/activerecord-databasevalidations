@@ -21,13 +21,18 @@ module ActiveRecord
         longblob:   { validator: ActiveModel::Validations::BytesizeValidator, default_maximum: 2 ** 32 - 1 },
       }
 
-      DEFAULT_CONSTRAINT_VALIDATORS = Set[:size, :not_null]
+
+      CONSTRAINT_VALIDATORS_SETS = {
+        default: Set[:size],
+        all:     Set[:size, :not_null, :basic_multilingual_plane],
+      }
 
       attr_reader :klass, :constraints
 
       def initialize(options = {})
         @klass = options[:class]
-        @constraints = options.delete(:constraints) || DEFAULT_CONSTRAINT_VALIDATORS
+        @constraints = options.delete(:constraints) || :default
+        @constraints = CONSTRAINT_VALIDATORS_SETS[@constraints] if CONSTRAINT_VALIDATORS_SETS.key?(@constraints)
         @constraint_validators = {}
         super
       end
@@ -52,7 +57,7 @@ module ActiveRecord
             end
           end
 
-          if constraints.include?(:basic_multilingual_plane) && column.text?
+          if constraints.include?(:basic_multilingual_plane) && column.text? && column.collation =~ /\Autf8(?:mb3)?_/
             validators << ActiveModel::Validations::BasicMultilingualPlaneValidator.new(attributes: [attribute], class: klass, maximum: maximum)
           end
 

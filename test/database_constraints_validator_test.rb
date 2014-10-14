@@ -3,7 +3,7 @@
 require 'test_helper'
 
 ActiveRecord::Migration.suppress_messages do
-  ActiveRecord::Migration.create_table("foos", force: true) do |t|
+  ActiveRecord::Migration.create_table("foos", force: true, options: "CHARACTER SET utf8mb3") do |t|
     t.string   :string,    limit: 40
     t.text     :tinytext,  limit: 255
     t.binary   :varbinary, limit: 255
@@ -12,11 +12,19 @@ ActiveRecord::Migration.suppress_messages do
     t.integer  :checked,       null: false, default: 0
     t.integer  :unchecked,     null: false
   end
+
+  ActiveRecord::Migration.create_table("bars", force: true, options: "CHARACTER SET utf8mb4") do |t|
+    t.string   :mb4_string
+  end
 end
 
 class Foo < ActiveRecord::Base
   validates :string, :tinytext, :varbinary, :blob, :checked, database_constraints: true
   validates :not_null_text, database_constraints: { constraints: [:size, :basic_multilingual_plane] }
+end
+
+class Bar < ActiveRecord::Base
+  validates :mb4_string, database_constraints: { constraints: [:basic_multilingual_plane] }
 end
 
 class DatabaseConstraintsValidatorTest < Minitest::Test
@@ -68,6 +76,11 @@ class DatabaseConstraintsValidatorTest < Minitest::Test
     assert Foo.new.valid?
     assert Foo.new(checked: 1).valid?
     refute Foo.new(checked: nil).valid?
+  end
+
+  def test_should_not_create_a_validor_for_a_utf8mb4_field
+    assert Bar.new(mb4_string: '💩').valid?
+    Bar._validators[:mb4_string].first.attribute_validators(:mb4_string).empty?
   end
 
   def test_error_messages
