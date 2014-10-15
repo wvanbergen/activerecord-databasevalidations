@@ -38,6 +38,7 @@ You can also use `validates_database_constraints_of`:
 class Bar < ActiveRecord::Base
   validates_database_constraints_of :my_field, with: :size
 end
+```
 
 ### Available validations
 
