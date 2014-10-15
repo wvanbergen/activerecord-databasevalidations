@@ -33,7 +33,7 @@ class BytesizeValidatorTest < Minitest::Test
     assert @model.valid?
   end
 
-  def test_too_large_binary_values_are_invlid
+  def test_too_large_binary_values_are_invalid
     @model.data = "\0" * 101
     assert @model.invalid?
     assert_equal ["is too long (maximum is 100 bytes)"], @model.errors[:data]

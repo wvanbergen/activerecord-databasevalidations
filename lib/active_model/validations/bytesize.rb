@@ -3,7 +3,7 @@ module ActiveModel
     class BytesizeValidator < ActiveModel::EachValidator
       def check_validity!
         unless options[:maximum].is_a?(Integer) && options[:maximum] >= 0
-          raise ArgumentError, ":maximum must be a nonnegative Integer"
+          raise ArgumentError, ":maximum must be set to a nonnegative Integer"
         end
       end
 

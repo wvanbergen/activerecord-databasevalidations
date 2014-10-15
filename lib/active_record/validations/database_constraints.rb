@@ -27,7 +27,7 @@ module ActiveRecord
 
       def initialize(options = {})
         @klass = options[:class]
-        @constraints = Set.new(options[:in] || Array.wrap(options[:with]))
+        @constraints = Set.new(Array.wrap(options[:in]) + Array.wrap(options[:with]))
         @constraint_validators = {}
         super
       end
@@ -35,7 +35,7 @@ module ActiveRecord
       def check_validity!
         invalid_constraints = constraints - VALID_CONSTRAINTS
 
-        raise ArgumentError, "You have to specify what constraints to validate for." if @constraints.empty?
+        raise ArgumentError, "You have to specify what constraints to validate for." if constraints.empty?
         raise ArgumentError, "#{invalid_constraints.map(&:inspect).join(',')} is not a valid constraint." unless invalid_constraints.empty?
       end
 
