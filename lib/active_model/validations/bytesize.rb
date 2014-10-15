@@ -1,6 +1,13 @@
 module ActiveModel
   module Validations
     class BytesizeValidator < ActiveModel::EachValidator
+      attr_reader :encoding
+
+      def initialize(options = {})
+        super
+        @encoding = Encoding.find(options[:encoding]) if options[:encoding]
+      end
+
       def check_validity!
         unless options[:maximum].is_a?(Integer) && options[:maximum] >= 0
           raise ArgumentError, ":maximum must be set to a nonnegative Integer"
@@ -8,14 +15,19 @@ module ActiveModel
       end
 
       def validate_each(record, attribute, value)
-        bytesize = value.to_s.bytesize
-        if bytesize > options[:maximum]
+        string = value.to_s
+        string = string.encode(options[:encoding]) if requires_transcoding?(string)
+        if string.bytesize > options[:maximum]
           errors_options = options.except(:too_many_bytes, :maximum)
           default_message = options[:too_many_bytes]
           errors_options[:count] = options[:maximum]
           errors_options[:message] ||= default_message if default_message
           record.errors.add(attribute, :too_many_bytes, errors_options)
         end
+      end
+
+      def requires_transcoding?(value)
+        encoding.present? && encoding != value.encoding
       end
     end
 

@@ -68,6 +68,7 @@ class DatabaseConstraintsValidatorTest < Minitest::Test
     assert_equal 1, subvalidators.length
     assert_kind_of ActiveModel::Validations::BytesizeValidator, subvalidators.first
     assert_equal 65535, subvalidators.first.options[:maximum]
+    assert_equal nil, subvalidators.first.encoding
   end
 
   def test_not_null_text_field_defines_requested_bytesize_validator_and_unicode_validator
@@ -78,6 +79,7 @@ class DatabaseConstraintsValidatorTest < Minitest::Test
     assert_kind_of ActiveModel::Validations::BytesizeValidator, subvalidators.first
     assert_kind_of ActiveModel::Validations::BasicMultilingualPlaneValidator, subvalidators.second
     assert_equal 65535, subvalidators.first.options[:maximum]
+    assert_equal Encoding.find('utf-8'), subvalidators.first.encoding
   end
 
   def test_not_null_columns_with_a_default_value
@@ -98,5 +100,10 @@ class DatabaseConstraintsValidatorTest < Minitest::Test
     assert_equal ["is too long (maximum is 40 characters)"], foo.errors[:string]
     assert_equal ["must be set"], foo.errors[:checked]
     assert_equal ["contains characters outside Unicode's basic multilingual plane"], foo.errors[:not_null_text]
+  end
+
+  def test_encoding_craziness
+    foo = Foo.new(tinytext: ('ü' * 128).encode('ISO-8859-15'), string: ('ü' * 40).encode('ISO-8859-15'))
+    assert foo.invalid?
   end
 end

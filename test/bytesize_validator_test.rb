@@ -7,7 +7,7 @@ class BytesizeValidatorTest < Minitest::Test
     include ActiveModel::Validations
 
     attr_accessor :data
-    validates :data, bytesize: { maximum: 100 }
+    validates :data, bytesize: { maximum: 100, encoding: 'utf-8' }
   end
 
   def setup
@@ -41,6 +41,12 @@ class BytesizeValidatorTest < Minitest::Test
 
   def test_too_large_unicode_values_are_invalid
     @model.data = '💩' * 26
+    assert @model.invalid?
+    assert_equal ["is too long (maximum is 100 bytes)"], @model.errors[:data]
+  end
+
+  def test_transcoding
+    @model.data = ('ü' * 51).encode('ISO-8859-15')
     assert @model.invalid?
     assert_equal ["is too long (maximum is 100 bytes)"], @model.errors[:data]
   end

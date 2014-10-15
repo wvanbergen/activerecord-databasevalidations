@@ -54,9 +54,10 @@ module ActiveRecord
         type_limit      = TYPE_LIMITS.fetch(column_type, {})
         validator_class = type_limit[:validator]
         maximum         = column.limit || type_limit[:default_maximum]
+        encoding        = column.text? ? determine_encoding(column) : nil
 
         if validator_class && maximum
-          validator_class.new(attributes: [column.name.to_sym], class: klass, maximum: maximum)
+          validator_class.new(attributes: [column.name.to_sym], class: klass, maximum: maximum, encoding: encoding)
         end
       end
 
@@ -81,6 +82,15 @@ module ActiveRecord
       def validate_each(record, attribute, value)
         attribute_validators(attribute).each do |validator|
           validator.validate_each(record, attribute, value)
+        end
+      end
+
+      private
+
+      def determine_encoding(column)
+        case column.collation
+          when /\Autf8/; Encoding.find('utf-8')
+          else raise NotImplementedError, "Don't know how to determine the Ruby encoding for MySQL's #{column.collation} collation."
         end
       end
     end
