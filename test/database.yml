@@ -1,0 +1,6 @@
+test:
+  adapter: mysql2
+  database: database_validations
+  username: travis
+  encoding: utf8
+  strict: false
