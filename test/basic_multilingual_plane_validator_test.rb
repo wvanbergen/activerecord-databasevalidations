@@ -30,4 +30,14 @@ class BasicMultilingualPlaneValidatorTest < Minitest::Test
     @model.unicode = nil
     assert @model.valid?
   end
+
+  def test_different_type
+    @model.unicode = 1
+    assert @model.valid?
+  end
+
+  def test_non_unicode_encoding
+    @model.unicode = 'ü'.encode('ISO-8859-15')
+    assert @model.valid?
+  end
 end
