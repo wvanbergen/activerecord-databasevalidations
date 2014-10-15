@@ -7,7 +7,9 @@ module ActiveModel
 
       def validate_each(record, attribute, value)
         return if value.nil?
-        unless Rejectu.valid?(value)
+        return if value.to_s.encoding != Encoding::UTF_8
+
+        unless Rejectu.valid?(value.to_s)
           errors_options = options.except(:characters_outside_basic_multilingual_plane)
           default_message = options[:characters_outside_basic_multilingual_plane]
           errors_options[:message] ||= default_message if default_message
