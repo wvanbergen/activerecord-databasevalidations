@@ -58,6 +58,7 @@ class DataLossTest < Minitest::Test
 
   def test_unchecked_utf8mb3_field_silently_loses_data_when_strict_mode_is_disabled
     emoji = '💩'
+    assert_equal 1, emoji.length
     assert_equal 4, emoji.bytesize
     unicorn = Unicorn.create(string: emoji)
     assert unicorn.reload.string != emoji
