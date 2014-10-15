@@ -8,8 +8,8 @@ Gem::Specification.new do |spec|
   spec.version       = ActiveRecord::DatabaseValidations::VERSION
   spec.authors       = ["Willem van Bergen"]
   spec.email         = ["willem@railsdoctors.com"]
-  spec.summary       = %q{Add validations to your ActiveRecord models based on your database constraints.}
-  spec.description   = %q{Opt-in validations for your ActiveRecord models based on your database constraints, including text field length, and NOT NULL constraints.}
+  spec.summary       = %q{Add validations to your ActiveRecord models based on MySQL database constraints.}
+  spec.description   = %q{Opt-in validations for your ActiveRecord models based on your MySQL database constraints, including text field size, UTF-8 encoding issues, and NOT NULL constraints.}
   spec.homepage      = "https://github.com/wvanbergen/activerecord-database_validations"
   spec.license       = "MIT"
 
