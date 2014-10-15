@@ -19,16 +19,23 @@ ActiveRecord::Migration.suppress_messages do
 end
 
 class Foo < ActiveRecord::Base
-  validates :string, :tinytext, :varbinary, :blob, database_constraints: true
-  validates :checked, database_constraints: { constraint: :not_null }
-  validates :not_null_text, database_constraints: { constraints: [:size, :basic_multilingual_plane] }
+  validates :string, :tinytext, :varbinary, :blob, database_constraints: :size
+  validates :checked, database_constraints: :not_null
+  validates :not_null_text, database_constraints: [:size, :basic_multilingual_plane]
 end
 
 class Bar < ActiveRecord::Base
-  validates :mb4_string, database_constraints: { constraints: [:basic_multilingual_plane] }
+  validates :mb4_string, database_constraints: :basic_multilingual_plane
 end
 
 class DatabaseConstraintsValidatorTest < Minitest::Test
+  def test_argument_validation
+    assert_raises(ArgumentError) { Bar.validates(:mb4_string, database_constraints: []) }
+    assert_raises(ArgumentError) { Bar.validates(:mb4_string, database_constraints: true) }
+    assert_raises(ArgumentError) { Bar.validates(:mb4_string, database_constraints: :bogus) }
+    assert_raises(ArgumentError) { Bar.validates(:mb4_string, database_constraints: [:size, :bogus]) }
+  end
+
   def test_validators_are_defined
     assert_kind_of ActiveRecord::Validations::DatabaseConstraintsValidator, Foo._validators[:string].first
     assert_kind_of ActiveRecord::Validations::DatabaseConstraintsValidator, Foo._validators[:tinytext].first

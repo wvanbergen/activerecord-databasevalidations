@@ -21,21 +21,22 @@ module ActiveRecord
         longblob:   { validator: ActiveModel::Validations::BytesizeValidator, default_maximum: 2 ** 32 - 1 },
       }
 
-
-      CONSTRAINT_VALIDATORS_SETS = {
-        default: Set[:size],
-        all:     Set[:size, :not_null, :basic_multilingual_plane],
-      }
-
       attr_reader :klass, :constraints
+
+      VALID_CONSTRAINTS = Set[:size, :basic_multilingual_plane, :not_null]
 
       def initialize(options = {})
         @klass = options[:class]
-        options[:constraints] = Array.wrap(options.delete(:constraint)) if options.key?(:constraint)
-        @constraints = options.delete(:constraints) || :default
-        @constraints = CONSTRAINT_VALIDATORS_SETS[@constraints] if CONSTRAINT_VALIDATORS_SETS.key?(@constraints)
+        @constraints = Set.new(options[:in] || Array.wrap(options[:with]))
         @constraint_validators = {}
         super
+      end
+
+      def check_validity!
+        invalid_constraints = constraints - VALID_CONSTRAINTS
+
+        raise ArgumentError, "You have to specify what constraints to validate for." if @constraints.empty?
+        raise ArgumentError, "#{invalid_constraints.map(&:inspect).join(',')} is not a valid constraint." unless invalid_constraints.empty?
       end
 
       def not_null_validator(column)
