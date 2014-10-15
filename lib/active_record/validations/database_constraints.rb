@@ -38,31 +38,42 @@ module ActiveRecord
         super
       end
 
+      def not_null_validator(column)
+        return unless constraints.include?(:not_null)
+        return if column.null
+
+        ActiveModel::Validations::NotNullValidator.new(attributes: [column.name.to_sym], class: klass)
+      end
+
+      def size_validator(column)
+        return unless constraints.include?(:size)
+        return unless column.text? || column.binary?
+
+        column_type     = column.sql_type.sub(/\(.*\z/, '').gsub(/\s/, '_').to_sym
+        type_limit      = TYPE_LIMITS.fetch(column_type, {})
+        validator_class = type_limit[:validator]
+        maximum         = column.limit || type_limit[:default_maximum]
+
+        if validator_class && maximum
+          validator_class.new(attributes: [column.name.to_sym], class: klass, maximum: maximum)
+        end
+      end
+
+      def basic_multilingual_plane_validator(column)
+        return unless constraints.include?(:basic_multilingual_plane)
+        return unless column.text? && column.collation =~ /\Autf8(?:mb3)?_/
+        ActiveModel::Validations::BasicMultilingualPlaneValidator.new(attributes: [column.name.to_sym], class: klass)
+      end
+
       def attribute_validators(attribute)
         @constraint_validators[attribute] ||= begin
-          validators = []
-          column = klass.columns_hash[attribute.to_s] or raise "Model #{self.class.name} does not have column #{column_name}!"
+          column = klass.columns_hash[attribute.to_s] or raise ArgumentError.new("Model #{self.class.name} does not have column #{column_name}!")
 
-          if constraints.include?(:not_null) && !column.null
-            validators << ActiveModel::Validations::NotNullValidator.new(attributes: [attribute], class: klass)
-          end
-
-          if constraints.include?(:size) && (column.text? || column.binary?)
-            column_type     = column.sql_type.sub(/\(.*\z/, '').gsub(/\s/, '_').to_sym
-            type_limit      = TYPE_LIMITS.fetch(column_type, {})
-            validator_class = type_limit[:validator]
-            maximum         = column.limit || type_limit[:default_maximum]
-
-            if validator_class && maximum
-              validators << validator_class.new(attributes: [attribute], class: klass, maximum: maximum)
-            end
-          end
-
-          if constraints.include?(:basic_multilingual_plane) && column.text? && column.collation =~ /\Autf8(?:mb3)?_/
-            validators << ActiveModel::Validations::BasicMultilingualPlaneValidator.new(attributes: [attribute], class: klass, maximum: maximum)
-          end
-
-          validators
+          [
+            not_null_validator(column),
+            size_validator(column),
+            basic_multilingual_plane_validator(column),
+          ].compact
         end
       end
 
