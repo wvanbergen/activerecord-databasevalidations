@@ -67,8 +67,6 @@ end
 Note that this will create validations without inspecting the column to see if it 
 actually makes sense.
 
-```
-
 ## Contributing
 
 1. Fork it (http://github.com/wvanbergen/activerecord-databasevalidations/fork)
