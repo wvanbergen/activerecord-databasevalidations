@@ -49,14 +49,14 @@ class DatabaseConstraintsValidatorTest < Minitest::Test
 
   def test_not_null_field_defines_not_null_validator_if_requested
     validator = Foo._validators[:checked].first
-    subvalidators = validator.attribute_validators(:checked)
+    subvalidators = validator.attribute_validators(Foo, :checked)
     assert_equal 1, subvalidators.length
     assert_kind_of ActiveModel::Validations::NotNullValidator, subvalidators.first
   end
 
   def test_string_field_defines_length_validator_by_default
     validator = Foo._validators[:string].first
-    subvalidators = validator.attribute_validators(:string)
+    subvalidators = validator.attribute_validators(Foo, :string)
     assert_equal 1, subvalidators.length
     assert_kind_of ActiveModel::Validations::LengthValidator, subvalidators.first
     assert_equal 40, subvalidators.first.options[:maximum]
@@ -64,7 +64,7 @@ class DatabaseConstraintsValidatorTest < Minitest::Test
 
   def test_blob_field_defines_bytesize_validator
     validator = Foo._validators[:blob].first
-    subvalidators = validator.attribute_validators(:blob)
+    subvalidators = validator.attribute_validators(Foo, :blob)
     assert_equal 1, subvalidators.length
     assert_kind_of ActiveModel::Validations::BytesizeValidator, subvalidators.first
     assert_equal 65535, subvalidators.first.options[:maximum]
@@ -73,7 +73,7 @@ class DatabaseConstraintsValidatorTest < Minitest::Test
 
   def test_not_null_text_field_defines_requested_bytesize_validator_and_unicode_validator
     validator = Foo._validators[:not_null_text].first
-    subvalidators = validator.attribute_validators(:not_null_text)
+    subvalidators = validator.attribute_validators(Foo, :not_null_text)
     assert_equal 2, subvalidators.length
 
     assert_kind_of ActiveModel::Validations::BytesizeValidator, subvalidators.first
@@ -90,7 +90,7 @@ class DatabaseConstraintsValidatorTest < Minitest::Test
 
   def test_should_not_create_a_validor_for_a_utf8mb4_field
     assert Bar.new(mb4_string: '💩').valid?
-    Bar._validators[:mb4_string].first.attribute_validators(:mb4_string).empty?
+    Bar._validators[:mb4_string].first.attribute_validators(Bar, :mb4_string).empty?
   end
 
   def test_error_messages

@@ -21,12 +21,11 @@ module ActiveRecord
         longblob:   { validator: ActiveModel::Validations::BytesizeValidator, default_maximum: 2 ** 32 - 1 },
       }
 
-      attr_reader :klass, :constraints
+      attr_reader :constraints
 
       VALID_CONSTRAINTS = Set[:size, :basic_multilingual_plane, :not_null]
 
       def initialize(options = {})
-        @klass = options[:class]
         @constraints = Set.new(Array.wrap(options[:in]) + Array.wrap(options[:with]))
         @constraint_validators = {}
         super
@@ -39,14 +38,14 @@ module ActiveRecord
         raise ArgumentError, "#{invalid_constraints.map(&:inspect).join(',')} is not a valid constraint." unless invalid_constraints.empty?
       end
 
-      def not_null_validator(column)
+      def not_null_validator(klass, column)
         return unless constraints.include?(:not_null)
         return if column.null
 
         ActiveModel::Validations::NotNullValidator.new(attributes: [column.name.to_sym], class: klass)
       end
 
-      def size_validator(column)
+      def size_validator(klass, column)
         return unless constraints.include?(:size)
         return unless column.text? || column.binary?
 
@@ -61,26 +60,26 @@ module ActiveRecord
         end
       end
 
-      def basic_multilingual_plane_validator(column)
+      def basic_multilingual_plane_validator(klass, column)
         return unless constraints.include?(:basic_multilingual_plane)
         return unless column.text? && column.collation =~ /\Autf8(?:mb3)?_/
         ActiveModel::Validations::BasicMultilingualPlaneValidator.new(attributes: [column.name.to_sym], class: klass)
       end
 
-      def attribute_validators(attribute)
+      def attribute_validators(klass, attribute)
         @constraint_validators[attribute] ||= begin
           column = klass.columns_hash[attribute.to_s] or raise ArgumentError.new("Model #{self.class.name} does not have column #{column_name}!")
 
           [
-            not_null_validator(column),
-            size_validator(column),
-            basic_multilingual_plane_validator(column),
+            not_null_validator(klass, column),
+            size_validator(klass, column),
+            basic_multilingual_plane_validator(klass, column),
           ].compact
         end
       end
 
       def validate_each(record, attribute, value)
-        attribute_validators(attribute).each do |validator|
+        attribute_validators(record.class, attribute).each do |validator|
           validator.validate_each(record, attribute, value)
         end
       end

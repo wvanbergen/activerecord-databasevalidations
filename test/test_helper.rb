@@ -9,6 +9,8 @@ require "yaml"
 
 require "active_record/database_validations"
 
+Minitest::Test = MiniTest::Unit::TestCase unless defined?(MiniTest::Test)
+
 database_yml = YAML.load_file(File.expand_path('../database.yml', __FILE__))
 ActiveRecord::Base.establish_connection(database_yml['test'])
 I18n.enforce_available_locales = false
