@@ -9,6 +9,28 @@ require "yaml"
 
 require "active_record/database_validations"
 
+module DataLossAssertions
+  def assert_data_loss(record)
+    attributes = record.changed
+    provided_values = record.attributes.slice(*attributes)
+
+    record.save!(validate: false)
+
+    persisted_values = record.reload.attributes.slice(*attributes)
+    refute_equal provided_values, persisted_values
+  end
+
+  def refute_data_loss(record)
+    attributes = record.changed
+    provided_values = record.attributes.slice(*attributes)
+
+    record.save!(validate: false)
+
+    persisted_values = record.reload.attributes.slice(*attributes)
+    assert_equal provided_values, persisted_values
+  end
+end
+
 Minitest::Test = MiniTest::Unit::TestCase unless defined?(MiniTest::Test)
 
 database_yml = YAML.load_file(File.expand_path('../database.yml', __FILE__))

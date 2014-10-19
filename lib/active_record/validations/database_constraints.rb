@@ -23,7 +23,7 @@ module ActiveRecord
 
       attr_reader :constraints
 
-      VALID_CONSTRAINTS = Set[:size, :basic_multilingual_plane, :not_null]
+      VALID_CONSTRAINTS = Set[:size, :basic_multilingual_plane, :not_null, :range]
 
       def initialize(options = {})
         @constraints = Set.new(Array.wrap(options[:in]) + Array.wrap(options[:with]))
@@ -60,6 +60,22 @@ module ActiveRecord
         end
       end
 
+      def range_validator(klass, column)
+        return unless constraints.include?(:range)
+        return unless column.number?
+
+        case column.type
+        when :decimal
+          maximum = 10 ** (column.precision - column.scale)
+          minimum = 0 - maximum
+          ActiveModel::Validations::NumericalityValidator.new(attributes: [column.name.to_sym], class: klass, greater_than: minimum, less_than: maximum, allow_nil: true)
+        when :integer
+          maximum = 2 ** ((column.limit * 8) - 1)
+          minimum = 0 - maximum
+          ActiveModel::Validations::NumericalityValidator.new(attributes: [column.name.to_sym], class: klass, greater_than_or_equal_to: minimum, less_than: maximum, allow_nil: true, only_integer: true)
+        end
+      end
+
       def basic_multilingual_plane_validator(klass, column)
         return unless constraints.include?(:basic_multilingual_plane)
         return unless column.text? && column.collation =~ /\Autf8(?:mb3)?_/
@@ -74,6 +90,7 @@ module ActiveRecord
             not_null_validator(klass, column),
             size_validator(klass, column),
             basic_multilingual_plane_validator(klass, column),
+            range_validator(klass, column),
           ].compact
         end
       end

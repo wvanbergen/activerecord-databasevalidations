@@ -4,17 +4,26 @@ require 'test_helper'
 
 ActiveRecord::Migration.suppress_messages do
   ActiveRecord::Migration.create_table("foos", force: true, options: "CHARACTER SET utf8mb3") do |t|
-    t.string   :string,    limit: 40
-    t.text     :tinytext,  limit: 255
-    t.binary   :varbinary, limit: 255
+    t.string   :string,        limit: 40
+    t.text     :tinytext,      limit: 255
+    t.binary   :varbinary,     limit: 255
     t.binary   :blob
     t.text     :not_null_text, null: false
-    t.integer  :checked,       null: false, default: 0
+    t.integer  :checked,       null: false,  default: 0
     t.integer  :unchecked,     null: false
   end
 
   ActiveRecord::Migration.create_table("bars", force: true, options: "CHARACTER SET utf8mb4") do |t|
     t.string   :mb4_string
+  end
+
+  ActiveRecord::Migration.create_table("nums", force: true) do |t|
+    t.decimal  :decimal,       precision: 5, scale: 2
+    t.integer  :tinyint,       limit: 1
+    t.integer  :smallint,      limit: 2
+    t.integer  :mediumint,     limit: 3
+    t.integer  :int,           limit: 4
+    t.integer  :bigint,        limit: 5
   end
 end
 
@@ -28,7 +37,13 @@ class Bar < ActiveRecord::Base
   validates :mb4_string, database_constraints: :basic_multilingual_plane
 end
 
+class Num < ActiveRecord::Base
+  validates :decimal, :tinyint, :smallint, :mediumint, :int, :bigint, database_constraints: :range
+end
+
 class DatabaseConstraintsValidatorTest < Minitest::Test
+  include DataLossAssertions
+
   def test_argument_validation
     assert_raises(ArgumentError) { Bar.validates(:mb4_string, database_constraints: []) }
     assert_raises(ArgumentError) { Bar.validates(:mb4_string, database_constraints: true) }
@@ -88,9 +103,55 @@ class DatabaseConstraintsValidatorTest < Minitest::Test
     refute Foo.new(checked: nil).valid?
   end
 
-  def test_should_not_create_a_validor_for_a_utf8mb4_field
-    assert Bar.new(mb4_string: '💩').valid?
-    Bar._validators[:mb4_string].first.attribute_validators(Bar, :mb4_string).empty?
+  def test_should_not_create_a_validator_for_a_utf8mb4_field
+    assert Bar._validators[:mb4_string].first.attribute_validators(Bar, :mb4_string).empty?
+    emoji= Bar.new(mb4_string: '💩')
+    assert emoji.valid?
+    refute_data_loss emoji
+  end
+
+  def test_decimal_range
+    subvalidators = Num._validators[:decimal].first.attribute_validators(Num, :decimal)
+    assert_equal 1, subvalidators.length
+    assert_kind_of ActiveModel::Validations::NumericalityValidator, subvalidators.first
+
+    within_positive_range = Num.new(decimal: '999.99')
+    assert within_positive_range.valid?
+    refute_data_loss(within_positive_range)
+
+    within_negative_range = Num.new(decimal: '-999.99')
+    assert within_negative_range.valid?
+    refute_data_loss(within_negative_range)
+
+    outside_positive_range = Num.new(decimal: '1000.00')
+    refute outside_positive_range.valid?
+    assert_data_loss(outside_positive_range)
+
+    outside_negative_range = Num.new(decimal: '-1000.00')
+    refute outside_negative_range.valid?
+    assert_data_loss(outside_negative_range)
+  end
+
+  def test_integer_range
+    subvalidators = Num._validators[:bigint].first.attribute_validators(Num, :bigint)
+    assert_equal 1, subvalidators.length
+    assert_kind_of ActiveModel::Validations::NumericalityValidator, range_validator = subvalidators.first
+
+    within_positive_range = Num.new(tinyint: 127)
+    assert within_positive_range.valid?
+    refute_data_loss(within_positive_range)
+
+    within_negative_range = Num.new(smallint: -32_768)
+    assert within_negative_range.valid?
+    refute_data_loss(within_negative_range)
+
+    outside_positive_range = Num.new(mediumint: 8_388_608)
+    refute outside_positive_range.valid?
+    assert_data_loss(outside_positive_range)
+
+    outside_negative_range = Num.new(int: -2_147_483_649)
+    refute outside_negative_range.valid?
+    assert_data_loss(outside_negative_range)
   end
 
   def test_error_messages
@@ -105,5 +166,6 @@ class DatabaseConstraintsValidatorTest < Minitest::Test
   def test_encoding_craziness
     foo = Foo.new(tinytext: ('ü' * 128).encode('ISO-8859-15'), string: ('ü' * 40).encode('ISO-8859-15'))
     assert foo.invalid?
+    assert_data_loss foo
   end
 end
