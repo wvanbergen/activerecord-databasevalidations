@@ -4,9 +4,9 @@ require 'test_helper'
 
 ActiveRecord::Migration.suppress_messages do
   ActiveRecord::Migration.create_table("unicorns", force: true, options: "CHARACTER SET utf8mb3") do |t|
-    t.column :string,    "VARCHAR(40)"
-    t.column :tinytext,  "TINYTEXT"
-    t.column :blob,      "BLOB"
+    t.column :string,           "VARCHAR(40)"
+    t.column :tinytext,         "TINYTEXT"
+    t.column :blob,             "BLOB"
 
     t.column :decimal,          "DECIMAL(10, 2)"
     t.column :unsigned_decimal, "DECIMAL(5, 3) UNSIGNED"
@@ -51,7 +51,7 @@ class DataLossTest < Minitest::Test
     assert_data_loss Unicorn.new(unsigned_decimal: 0 - delta)
   end
 
-  def test_integers_loses_value_outside_of_range
+  def test_integers_silently_change_value_outside_of_range
     refute_data_loss Unicorn.new(tinyint:  127)
     refute_data_loss Unicorn.new(tinyint: -128)
     assert_data_loss Unicorn.new(tinyint:  128)
@@ -83,22 +83,22 @@ class DataLossTest < Minitest::Test
     assert_data_loss Unicorn.new(unsigned_tinyint: -1)
   end
 
-  def test_bounded_string_fields_silently_loses_data_when_strict_mode_is_disabled
+  def test_varchar_field_silently_drops_characters_when_over_character_limit
     refute_data_loss Unicorn.new(string: 'ü' * 40)
     assert_data_loss Unicorn.new(string: 'ü' * 41)
   end
 
-  def test_text_field_silently_loses_data_when_strict_mode_is_disabled
+  def test_text_field_silently_drops_charactars_when_when_over_bytesize_limit
     refute_data_loss Unicorn.new(tinytext: '写' * 85) # 85 * 3 = 255 bytes => fits
     assert_data_loss Unicorn.new(tinytext: 'ü' * 128) # 128 * 2 = 256 bytes => doesn't fit :()
   end
 
-  def test_binary_field_silently_loses_data_when_strict_mode_is_disabled
+  def test_blob_field_silently_drops_bytes_when_when_over_bytesize_limit
     refute_data_loss Unicorn.new(blob: [].pack('x65535')) # 65535 is bytesize limit of blob field
     assert_data_loss Unicorn.new(blob: [].pack('x65536'))
   end
 
-  def test_unchecked_utf8mb3_field_silently_loses_data_when_strict_mode_is_disabled
+  def test_utf8mb3_field_sliently_truncates_strings_after_first_4byte_character
     emoji = '💩'
     assert_equal 1, emoji.length
     assert_equal 4, emoji.bytesize
