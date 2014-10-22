@@ -64,14 +64,21 @@ module ActiveRecord
         return unless constraints.include?(:range)
         return unless column.number?
 
+        unsigned = column.sql_type =~ / unsigned\z/
         case column.type
         when :decimal
-          maximum = 10 ** (column.precision - column.scale)
-          minimum = 0 - maximum
-          ActiveModel::Validations::NumericalityValidator.new(attributes: [column.name.to_sym], class: klass, greater_than: minimum, less_than: maximum, allow_nil: true)
+          args = { attributes: [column.name.to_sym], class: klass, allow_nil: true }
+          args[:less_than] = maximum = 10 ** (column.precision - column.scale)
+          if unsigned
+            args[:greater_than_or_equal_to] = 0
+          else
+            args[:greater_than] = 0 - maximum
+          end
+          ActiveModel::Validations::NumericalityValidator.new(args)
+
         when :integer
-          maximum = 2 ** ((column.limit * 8) - 1)
-          minimum = 0 - maximum
+          maximum = unsigned ? 1 << (column.limit * 8) : 1 << (column.limit * 8 - 1)
+          minimum = unsigned ? 0 : 0 - maximum
           ActiveModel::Validations::NumericalityValidator.new(attributes: [column.name.to_sym], class: klass, greater_than_or_equal_to: minimum, less_than: maximum, allow_nil: true, only_integer: true)
         end
       end

@@ -4,15 +4,19 @@ require 'test_helper'
 
 ActiveRecord::Migration.suppress_messages do
   ActiveRecord::Migration.create_table("unicorns", force: true, options: "CHARACTER SET utf8mb3") do |t|
-    t.string  :string,    limit: 40
-    t.text    :tinytext,  limit: 255
-    t.binary  :blob
-    t.decimal :decimal,   precision: 10, scale: 2
-    t.integer :tinyint,   limit: 1
-    t.integer :smallint,  limit: 2
-    t.integer :mediumint, limit: 3
-    t.integer :int,       limit: 4
-    t.integer :bigint,    limit: 8
+    t.column :string,    "VARCHAR(40)"
+    t.column :tinytext,  "TINYTEXT"
+    t.column :blob,      "BLOB"
+
+    t.column :decimal,          "DECIMAL(10, 2)"
+    t.column :unsigned_decimal, "DECIMAL(5, 3) UNSIGNED"
+
+    t.column :tinyint,          "TINYINT"
+    t.column :smallint,         "SMALLINT"
+    t.column :mediumint,        "MEDIUMINT"
+    t.column :int,              "INT"
+    t.column :bigint,           "BIGINT"
+    t.column :unsigned_tinyint, "TINYINT UNSIGNED"
   end
 end
 
@@ -29,10 +33,22 @@ class DataLossTest < Minitest::Test
   end
 
   def test_decimal_silently_changes_out_of_bound_values
-    factor = Unicorn.columns_hash['decimal'].precision - Unicorn.columns_hash['decimal'].scale
+    maximum = BigDecimal.new(10 **  (Unicorn.columns_hash['decimal'].precision - Unicorn.columns_hash['decimal'].scale))
+    delta   = BigDecimal.new(10 ** -(Unicorn.columns_hash['decimal'].scale), Unicorn.columns_hash['decimal'].precision)
 
-    refute_data_loss Unicorn.new(decimal: BigDecimal.new(10 ** factor - 1))
-    assert_data_loss Unicorn.new(decimal: BigDecimal.new(10 ** factor))
+    refute_data_loss Unicorn.new(decimal: maximum - delta)
+    assert_data_loss Unicorn.new(decimal: maximum)
+    refute_data_loss Unicorn.new(decimal: 0 - maximum + delta)
+    assert_data_loss Unicorn.new(decimal: 0 - maximum)
+
+
+    maximum = BigDecimal.new(10 **  (Unicorn.columns_hash['unsigned_decimal'].precision - Unicorn.columns_hash['unsigned_decimal'].scale))
+    delta   = BigDecimal.new(10 ** -(Unicorn.columns_hash['unsigned_decimal'].scale), Unicorn.columns_hash['unsigned_decimal'].precision)
+
+    refute_data_loss Unicorn.new(unsigned_decimal: maximum - delta)
+    assert_data_loss Unicorn.new(unsigned_decimal: maximum)
+    refute_data_loss Unicorn.new(unsigned_decimal: 0)
+    assert_data_loss Unicorn.new(unsigned_decimal: 0 - delta)
   end
 
   def test_integers_loses_value_outside_of_range
@@ -60,6 +76,11 @@ class DataLossTest < Minitest::Test
     refute_data_loss Unicorn.new(bigint: -9_223_372_036_854_775_808)
     assert_data_loss Unicorn.new(bigint:  9_223_372_036_854_775_808)
     assert_data_loss Unicorn.new(bigint: -9_223_372_036_854_775_809)
+
+    refute_data_loss Unicorn.new(unsigned_tinyint: 255)
+    refute_data_loss Unicorn.new(unsigned_tinyint: 0)
+    assert_data_loss Unicorn.new(unsigned_tinyint: 256)
+    assert_data_loss Unicorn.new(unsigned_tinyint: -1)
   end
 
   def test_bounded_string_fields_silently_loses_data_when_strict_mode_is_disabled

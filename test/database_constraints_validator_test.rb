@@ -18,12 +18,14 @@ ActiveRecord::Migration.suppress_messages do
   end
 
   ActiveRecord::Migration.create_table("nums", force: true) do |t|
-    t.decimal  :decimal,       precision: 5, scale: 2
-    t.integer  :tinyint,       limit: 1
-    t.integer  :smallint,      limit: 2
-    t.integer  :mediumint,     limit: 3
-    t.integer  :int,           limit: 4
-    t.integer  :bigint,        limit: 5
+    t.column :decimal,          "DECIMAL(5,2)"
+    t.column :unsigned_decimal, "DECIMAL(5,2) UNSIGNED"
+    t.column :tinyint,          "TINYINT"
+    t.column :smallint,         "SMALLINT"
+    t.column :mediumint,        "MEDIUMINT"
+    t.column :int,              "INT"
+    t.column :bigint,           "BIGINT"
+    t.column :unsigned_int,     "INT UNSIGNED"
   end
 end
 
@@ -38,7 +40,7 @@ class Bar < ActiveRecord::Base
 end
 
 class Num < ActiveRecord::Base
-  validates :decimal, :tinyint, :smallint, :mediumint, :int, :bigint, database_constraints: :range
+  validates :decimal, :unsigned_decimal, :tinyint, :smallint, :mediumint, :int, :bigint, :unsigned_int, database_constraints: :range
 end
 
 class DatabaseConstraintsValidatorTest < Minitest::Test
@@ -105,7 +107,7 @@ class DatabaseConstraintsValidatorTest < Minitest::Test
 
   def test_should_not_create_a_validator_for_a_utf8mb4_field
     assert Bar._validators[:mb4_string].first.attribute_validators(Bar, :mb4_string).empty?
-    emoji= Bar.new(mb4_string: '💩')
+    emoji = Bar.new(mb4_string: '💩')
     assert emoji.valid?
     refute_data_loss emoji
   end
@@ -115,21 +117,43 @@ class DatabaseConstraintsValidatorTest < Minitest::Test
     assert_equal 1, subvalidators.length
     assert_kind_of ActiveModel::Validations::NumericalityValidator, subvalidators.first
 
-    within_positive_range = Num.new(decimal: '999.99')
-    assert within_positive_range.valid?
-    refute_data_loss(within_positive_range)
+    inside_upper_bound = Num.new(decimal: '999.99')
+    assert inside_upper_bound.valid?
+    refute_data_loss(inside_upper_bound)
 
-    within_negative_range = Num.new(decimal: '-999.99')
-    assert within_negative_range.valid?
-    refute_data_loss(within_negative_range)
+    inside_lower_bound = Num.new(decimal: '-999.99')
+    assert inside_lower_bound.valid?
+    refute_data_loss(inside_lower_bound)
 
-    outside_positive_range = Num.new(decimal: '1000.00')
-    refute outside_positive_range.valid?
-    assert_data_loss(outside_positive_range)
+    outside_upper_bound = Num.new(decimal: '1000.00')
+    refute outside_upper_bound.valid?
+    assert_data_loss(outside_upper_bound)
 
-    outside_negative_range = Num.new(decimal: '-1000.00')
-    refute outside_negative_range.valid?
-    assert_data_loss(outside_negative_range)
+    outside_lower_bound = Num.new(decimal: '-1000.00')
+    refute outside_lower_bound.valid?
+    assert_data_loss(outside_lower_bound)
+  end
+
+  def test_unsigned_decimal_range
+    subvalidators = Num._validators[:unsigned_decimal].first.attribute_validators(Num, :unsigned_decimal)
+    assert_equal 1, subvalidators.length
+    assert_kind_of ActiveModel::Validations::NumericalityValidator, subvalidators.first
+
+    inside_upper_bound = Num.new(unsigned_decimal: '999.99')
+    assert inside_upper_bound.valid?
+    refute_data_loss(inside_upper_bound)
+
+    inside_lower_bound = Num.new(unsigned_decimal: '0.00')
+    assert inside_lower_bound.valid?
+    refute_data_loss(inside_lower_bound)
+
+    outside_upper_bound = Num.new(unsigned_decimal: '1000.00')
+    refute outside_upper_bound.valid?
+    assert_data_loss(outside_upper_bound)
+
+    outside_lower_bound = Num.new(unsigned_decimal: '-0.01')
+    refute outside_lower_bound.valid?
+    assert_data_loss(outside_lower_bound)
   end
 
   def test_integer_range
@@ -137,21 +161,43 @@ class DatabaseConstraintsValidatorTest < Minitest::Test
     assert_equal 1, subvalidators.length
     assert_kind_of ActiveModel::Validations::NumericalityValidator, range_validator = subvalidators.first
 
-    within_positive_range = Num.new(tinyint: 127)
-    assert within_positive_range.valid?
-    refute_data_loss(within_positive_range)
+    inside_upper_bound = Num.new(tinyint: 127)
+    assert inside_upper_bound.valid?
+    refute_data_loss(inside_upper_bound)
 
-    within_negative_range = Num.new(smallint: -32_768)
-    assert within_negative_range.valid?
-    refute_data_loss(within_negative_range)
+    inside_lower_bound = Num.new(smallint: -32_768)
+    assert inside_lower_bound.valid?
+    refute_data_loss(inside_lower_bound)
 
-    outside_positive_range = Num.new(mediumint: 8_388_608)
-    refute outside_positive_range.valid?
-    assert_data_loss(outside_positive_range)
+    outside_upper_bound = Num.new(mediumint: 8_388_608)
+    refute outside_upper_bound.valid?
+    assert_data_loss(outside_upper_bound)
 
-    outside_negative_range = Num.new(int: -2_147_483_649)
-    refute outside_negative_range.valid?
-    assert_data_loss(outside_negative_range)
+    outside_lower_bound = Num.new(int: -2_147_483_649)
+    refute outside_lower_bound.valid?
+    assert_data_loss(outside_lower_bound)
+  end
+
+  def unsigned_integer_range
+    subvalidators = Num._validators[:unsigned_int].first.attribute_validators(Num, :unsigned_int)
+    assert_equal 1, subvalidators.length
+    assert_kind_of ActiveModel::Validations::NumericalityValidator, range_validator = subvalidators.first
+
+    inside_upper_bound = Num.new(unsigned_int: 4_294_967_295)
+    assert inside_upper_bound.valid?
+    refute_data_loss(inside_upper_bound)
+
+    inside_lower_bound = Num.new(unsigned_int: 0)
+    assert inside_lower_bound.valid?
+    refute_data_loss(inside_lower_bound)
+
+    outside_upper_bound = Num.new(unsigned_int: 4_294_967_296)
+    refute outside_upper_bound.valid?
+    assert_data_loss(outside_upper_bound)
+
+    outside_lower_bound = Num.new(unsigned_int: -1)
+    refute outside_lower_bound.valid?
+    assert_data_loss(outside_lower_bound)
   end
 
   def test_error_messages
