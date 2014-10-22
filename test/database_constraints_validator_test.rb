@@ -4,17 +4,28 @@ require 'test_helper'
 
 ActiveRecord::Migration.suppress_messages do
   ActiveRecord::Migration.create_table("foos", force: true, options: "CHARACTER SET utf8mb3") do |t|
-    t.string   :string,    limit: 40
-    t.text     :tinytext,  limit: 255
-    t.binary   :varbinary, limit: 255
+    t.string   :string,        limit: 40
+    t.text     :tinytext,      limit: 255
+    t.binary   :varbinary,     limit: 255
     t.binary   :blob
     t.text     :not_null_text, null: false
-    t.integer  :checked,       null: false, default: 0
+    t.integer  :checked,       null: false,  default: 0
     t.integer  :unchecked,     null: false
   end
 
   ActiveRecord::Migration.create_table("bars", force: true, options: "CHARACTER SET utf8mb4") do |t|
     t.string   :mb4_string
+  end
+
+  ActiveRecord::Migration.create_table("nums", force: true) do |t|
+    t.column :decimal,          "DECIMAL(5,2)"
+    t.column :unsigned_decimal, "DECIMAL(5,2) UNSIGNED"
+    t.column :tinyint,          "TINYINT"
+    t.column :smallint,         "SMALLINT"
+    t.column :mediumint,        "MEDIUMINT"
+    t.column :int,              "INT"
+    t.column :bigint,           "BIGINT"
+    t.column :unsigned_int,     "INT UNSIGNED"
   end
 end
 
@@ -28,7 +39,13 @@ class Bar < ActiveRecord::Base
   validates :mb4_string, database_constraints: :basic_multilingual_plane
 end
 
+class Num < ActiveRecord::Base
+  validates :decimal, :unsigned_decimal, :tinyint, :smallint, :mediumint, :int, :bigint, :unsigned_int, database_constraints: :range
+end
+
 class DatabaseConstraintsValidatorTest < Minitest::Test
+  include DataLossAssertions
+
   def test_argument_validation
     assert_raises(ArgumentError) { Bar.validates(:mb4_string, database_constraints: []) }
     assert_raises(ArgumentError) { Bar.validates(:mb4_string, database_constraints: true) }
@@ -88,9 +105,99 @@ class DatabaseConstraintsValidatorTest < Minitest::Test
     refute Foo.new(checked: nil).valid?
   end
 
-  def test_should_not_create_a_validor_for_a_utf8mb4_field
-    assert Bar.new(mb4_string: '💩').valid?
-    Bar._validators[:mb4_string].first.attribute_validators(Bar, :mb4_string).empty?
+  def test_should_not_create_a_validator_for_a_utf8mb4_field
+    assert Bar._validators[:mb4_string].first.attribute_validators(Bar, :mb4_string).empty?
+    emoji = Bar.new(mb4_string: '💩')
+    assert emoji.valid?
+    refute_data_loss emoji
+  end
+
+  def test_decimal_range
+    subvalidators = Num._validators[:decimal].first.attribute_validators(Num, :decimal)
+    assert_equal 1, subvalidators.length
+    assert_kind_of ActiveModel::Validations::NumericalityValidator, subvalidators.first
+
+    inside_upper_bound = Num.new(decimal: '999.99')
+    assert inside_upper_bound.valid?
+    refute_data_loss(inside_upper_bound)
+
+    inside_lower_bound = Num.new(decimal: '-999.99')
+    assert inside_lower_bound.valid?
+    refute_data_loss(inside_lower_bound)
+
+    outside_upper_bound = Num.new(decimal: '1000.00')
+    refute outside_upper_bound.valid?
+    assert_data_loss(outside_upper_bound)
+
+    outside_lower_bound = Num.new(decimal: '-1000.00')
+    refute outside_lower_bound.valid?
+    assert_data_loss(outside_lower_bound)
+  end
+
+  def test_unsigned_decimal_range
+    subvalidators = Num._validators[:unsigned_decimal].first.attribute_validators(Num, :unsigned_decimal)
+    assert_equal 1, subvalidators.length
+    assert_kind_of ActiveModel::Validations::NumericalityValidator, subvalidators.first
+
+    inside_upper_bound = Num.new(unsigned_decimal: '999.99')
+    assert inside_upper_bound.valid?
+    refute_data_loss(inside_upper_bound)
+
+    inside_lower_bound = Num.new(unsigned_decimal: '0.00')
+    assert inside_lower_bound.valid?
+    refute_data_loss(inside_lower_bound)
+
+    outside_upper_bound = Num.new(unsigned_decimal: '1000.00')
+    refute outside_upper_bound.valid?
+    assert_data_loss(outside_upper_bound)
+
+    outside_lower_bound = Num.new(unsigned_decimal: '-0.01')
+    refute outside_lower_bound.valid?
+    assert_data_loss(outside_lower_bound)
+  end
+
+  def test_integer_range
+    subvalidators = Num._validators[:bigint].first.attribute_validators(Num, :bigint)
+    assert_equal 1, subvalidators.length
+    assert_kind_of ActiveModel::Validations::NumericalityValidator, range_validator = subvalidators.first
+
+    inside_upper_bound = Num.new(tinyint: 127)
+    assert inside_upper_bound.valid?
+    refute_data_loss(inside_upper_bound)
+
+    inside_lower_bound = Num.new(smallint: -32_768)
+    assert inside_lower_bound.valid?
+    refute_data_loss(inside_lower_bound)
+
+    outside_upper_bound = Num.new(mediumint: 8_388_608)
+    refute outside_upper_bound.valid?
+    assert_data_loss(outside_upper_bound)
+
+    outside_lower_bound = Num.new(int: -2_147_483_649)
+    refute outside_lower_bound.valid?
+    assert_data_loss(outside_lower_bound)
+  end
+
+  def unsigned_integer_range
+    subvalidators = Num._validators[:unsigned_int].first.attribute_validators(Num, :unsigned_int)
+    assert_equal 1, subvalidators.length
+    assert_kind_of ActiveModel::Validations::NumericalityValidator, range_validator = subvalidators.first
+
+    inside_upper_bound = Num.new(unsigned_int: 4_294_967_295)
+    assert inside_upper_bound.valid?
+    refute_data_loss(inside_upper_bound)
+
+    inside_lower_bound = Num.new(unsigned_int: 0)
+    assert inside_lower_bound.valid?
+    refute_data_loss(inside_lower_bound)
+
+    outside_upper_bound = Num.new(unsigned_int: 4_294_967_296)
+    refute outside_upper_bound.valid?
+    assert_data_loss(outside_upper_bound)
+
+    outside_lower_bound = Num.new(unsigned_int: -1)
+    refute outside_lower_bound.valid?
+    assert_data_loss(outside_lower_bound)
   end
 
   def test_error_messages
@@ -105,5 +212,6 @@ class DatabaseConstraintsValidatorTest < Minitest::Test
   def test_encoding_craziness
     foo = Foo.new(tinytext: ('ü' * 128).encode('ISO-8859-15'), string: ('ü' * 40).encode('ISO-8859-15'))
     assert foo.invalid?
+    assert_data_loss foo
   end
 end
