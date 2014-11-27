@@ -17,6 +17,7 @@ module ActiveRecord
               if value.length > limit
                 self[field] = value.slice(0, limit)
               end
+              return true # to make sure the callback chain doesn't halt
             end
 
           when :text
@@ -30,6 +31,7 @@ module ActiveRecord
               if value.bytesize > limit
                 self[field] = value.mb_chars.limit(limit).to_s
               end
+              return true # to make sure the callback chain doesn't halt
             end
           end
         end
