@@ -17,7 +17,14 @@ class MagicalCreature < ActiveRecord::Base
   validates :string, :tinytext, database_constraints: :size
 end
 
-class TruncationTest < Minitest::Test
+class StringTruncatorTest < Minitest::Test
+  def test_handles_nil_gracefully
+    u_nil = MagicalCreature.create!(string: 'present', tinytext: 'present')
+    u_nil.string, u_nil.tinytext = nil, nil
+    assert_equal ['string', 'tinytext'], u_nil.changed
+    assert u_nil.valid?
+  end
+
   def test_truncate_varchar_field_using_characters
     u1 = MagicalCreature.new(string: 'a' * 256)
     assert u1.valid?

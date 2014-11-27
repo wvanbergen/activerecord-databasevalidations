@@ -8,17 +8,28 @@ module ActiveRecord
           column = self.columns_hash[field.to_s]
           limit = column.limit
 
-          if column.collation !~ /\Autf8_/
-            raise ArgumentError, "Only UTF-8 encoded columns are supported."
+          if column.text? && column.collation !~ /\Autf8_/
+            raise ArgumentError, "Only UTF-8 textual columns are supported."
           end
 
           case column.type
           when :string
-            Proc.new { self[field] = self[field].slice(0, limit) if self.changes.key?(field.to_s) }
+            lambda do
+              return if self.changes[field].nil?
+              value = self[field].to_s
+              if value.length > limit
+                self[field] = value.slice(0, limit)
+              end
+            end
+
           when :text
-            Proc.new { self[field] = self[field].encode('utf-8').mb_chars.limit(limit).to_s if self.changes.key?(field.to_s) }
-          else
-            raise ArgumentError, "Can only truncate textual fields"
+            lambda do
+              return if self.changes[field].nil?
+              value = self[field].to_s.encode('utf-8')
+              if value.bytesize > limit
+                self[field] = value.mb_chars.limit(limit).to_s
+              end
+            end
           end
         end
       end
