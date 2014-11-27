@@ -9,7 +9,9 @@ module ActiveRecord
           case column.type
           when :string
             lambda do
-              return if self.changes[field].nil?
+              return unless self.attribute_changed?(field)
+              return if self[field].nil?
+
               limit = StringTruncator.mysql_textual_column_limit(column)
               value = self[field].to_s
               if value.length > limit
@@ -19,7 +21,9 @@ module ActiveRecord
 
           when :text
             lambda do
-              return if self.changes[field].nil?
+              return unless self.attribute_changed?(field)
+              return if self[field].nil?
+
               limit = StringTruncator.mysql_textual_column_limit(column)
               value = self[field].to_s
               value.encode!('utf-8') if value.encoding != Encoding::UTF_8
