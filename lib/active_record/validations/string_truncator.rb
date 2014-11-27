@@ -9,7 +9,7 @@ module ActiveRecord
           case column.type
           when :string
             lambda do
-              return unless self.attribute_changed?(field)
+              return unless self.changes.key?(field.to_s)
               return if self[field].nil?
 
               limit = StringTruncator.mysql_textual_column_limit(column)
@@ -22,7 +22,7 @@ module ActiveRecord
 
           when :text
             lambda do
-              return unless self.attribute_changed?(field)
+              return unless self.changes.key?(field.to_s)
               return if self[field].nil?
 
               limit = StringTruncator.mysql_textual_column_limit(column)
