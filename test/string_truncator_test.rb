@@ -5,6 +5,7 @@ ActiveRecord::Migration.suppress_messages do
   ActiveRecord::Migration.create_table("magical_creatures", force: true, options: "CHARACTER SET utf8mb3") do |t|
     t.string   :string,   limit: 255
     t.text     :tinytext, limit: 255
+    t.text     :text
   end
 end
 
@@ -13,6 +14,7 @@ class MagicalCreature < ActiveRecord::Base
 
   before_validation truncate_string(:string)
   before_validation truncate_string(:tinytext)
+  before_validation truncate_string(:text)
 
   validates :string, :tinytext, database_constraints: :size
 end
@@ -54,5 +56,11 @@ class StringTruncatorTest < Minitest::Test
     assert u4.valid?
     assert_equal 'ü' * 127, u4.tinytext
     assert_equal Encoding::UTF_8, u4.tinytext.encoding
+  end
+
+  def test_knows_limits_of_standard_types
+    u5 = MagicalCreature.new(text: 'a' * 65536)
+    assert u5.valid?
+    assert_equal 'a' * 65535, u5.text
   end
 end

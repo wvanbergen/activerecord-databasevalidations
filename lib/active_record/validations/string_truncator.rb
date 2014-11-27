@@ -14,7 +14,7 @@ module ActiveRecord
 
               limit = StringTruncator.mysql_textual_column_limit(column)
               value = self[field].to_s
-              if value.length > limit
+              if limit && value.length > limit
                 self[field] = value.slice(0, limit)
               end
               return true # to make sure the callback chain doesn't halt
@@ -28,7 +28,7 @@ module ActiveRecord
               limit = StringTruncator.mysql_textual_column_limit(column)
               value = self[field].to_s
               value.encode!('utf-8') if value.encoding != Encoding::UTF_8
-              if value.bytesize > limit
+              if limit && value.bytesize > limit
                 self[field] = value.mb_chars.limit(limit).to_s
               end
               return true # to make sure the callback chain doesn't halt
@@ -41,7 +41,10 @@ module ActiveRecord
         @mysql_textual_column_limits ||= {}
         @mysql_textual_column_limits[column] ||= begin
           raise ArgumentError, "Only UTF-8 textual columns are supported." unless column.text? && column.collation =~ /\Autf8_/
-          column.limit
+
+          column_type = column.sql_type.sub(/\(.*\z/, '').gsub(/\s/, '_').to_sym
+          type_limit  = ActiveRecord::Validations::DatabaseConstraintsValidator::TYPE_LIMITS.fetch(column_type, {})
+          column.limit || type_limit[:default_maximum]
         end
       end
     end
