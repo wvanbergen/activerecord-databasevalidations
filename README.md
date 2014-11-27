@@ -1,4 +1,4 @@
-# ActiveRecord::DatabaseValidations
+# ActiveRecord::DatabaseValidations [![Build Status](https://travis-ci.org/wvanbergen/activerecord-databasevalidations.svg?branch=master)](https://travis-ci.org/wvanbergen/activerecord-databasevalidations)
 
 Add validations to your ActiveRecord models based on your database constraints.
 
