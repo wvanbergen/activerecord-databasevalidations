@@ -37,7 +37,7 @@ module ActiveRecord
       def self.mysql_textual_column_limit(column)
         @mysql_textual_column_limits ||= {}
         @mysql_textual_column_limits[column] ||= begin
-          raise ArgumentError, "Only UTF-8 textual columns are supported." unless column.text? && column.collation =~ /\Autf8_/
+          raise ArgumentError, "Only UTF-8 textual columns are supported." unless column.text? && column.collation =~ /\Autf8/
 
           column_type = column.sql_type.sub(/\(.*\z/, '').gsub(/\s/, '_').to_sym
           type_limit  = ActiveRecord::Validations::DatabaseConstraintsValidator::TYPE_LIMITS.fetch(column_type, {})
