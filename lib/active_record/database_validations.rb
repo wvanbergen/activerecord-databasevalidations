@@ -2,6 +2,7 @@ require 'active_record'
 require 'active_support/i18n'
 require 'active_record/database_validations/version'
 
+require 'active_record/database_validations/mysql'
 require 'active_record/validations/database_constraints'
 require 'active_record/validations/string_truncator'
 
