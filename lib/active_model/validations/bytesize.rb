@@ -15,8 +15,8 @@ module ActiveModel
       end
 
       def validate_each(record, attribute, value)
-        string = value.to_s
-        string = string.encode(options[:encoding]) if requires_transcoding?(string)
+        string = ActiveRecord::DatabaseValidations::MySQL.value_for_column(value, options[:encoding])
+
         if string.bytesize > options[:maximum]
           errors_options = options.except(:too_many_bytes, :maximum)
           default_message = options[:too_many_bytes]
@@ -24,10 +24,6 @@ module ActiveModel
           errors_options[:message] ||= default_message if default_message
           record.errors.add(attribute, :too_many_bytes, errors_options)
         end
-      end
-
-      def requires_transcoding?(value)
-        encoding.present? && encoding != value.encoding
       end
     end
 
