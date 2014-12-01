@@ -10,6 +10,7 @@ class VarcharDefaultSizeTest < Minitest::Test
         t.string :string
       end
 
+      # This will fail if the field is more than 767 bytes.
       ActiveRecord::Migration.add_index(:varchars, :string, unique: true)
     end
 
