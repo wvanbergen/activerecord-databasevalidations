@@ -6,6 +6,8 @@ ActiveRecord::Migration.suppress_messages do
     t.string   :string,   limit: 255
     t.text     :tinytext, limit: 255
     t.text     :text
+
+    t.string :another_string, limit: 255
   end
 end
 
@@ -16,7 +18,9 @@ class MagicalCreature < ActiveRecord::Base
   before_validation truncate_string(:tinytext)
   before_validation truncate_string(:text)
 
-  validates :string, :tinytext, database_constraints: :size
+  validates :string, :tinytext, :text, :another_string, database_constraints: :size
+
+  truncate_to_field_limit :another_string
 end
 
 class StringTruncatorTest < Minitest::Test
@@ -62,5 +66,10 @@ class StringTruncatorTest < Minitest::Test
     u5 = MagicalCreature.new(text: 'a' * 65536)
     assert u5.valid?
     assert_equal 'a' * 65535, u5.text
+  end
+
+  def test_truncate_to_field_limit
+    u6 = MagicalCreature.new(another_string: 'a' * 256)
+    assert_equal 'a' * 255, u6.another_string
   end
 end
