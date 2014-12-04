@@ -23,7 +23,7 @@ module ActiveRecord
       module ClassMethods
         def truncate_to_field_limit(field)
           define_method(:"#{field}=") do |value|
-            write_attribute(field, truncate_value_to_field_limit(field, value))
+            super(truncate_value_to_field_limit(field, value))
           end
         end
 
