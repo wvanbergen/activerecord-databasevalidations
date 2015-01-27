@@ -61,7 +61,7 @@ You can also instantiate the validators yourself:
 
 ``` ruby
 class Bar < ActiveRecord::Base
-  validates :string_field, bytesize: { maximum: 255}, basic_multilingual_plane: true
+  validates :string_field, bytesize: { maximum: 255 }, basic_multilingual_plane: true
   validates :string_field, not_null: true
 end
 ```
