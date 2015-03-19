@@ -6,6 +6,8 @@ This gem is primarily intended for MySQL databases not running in strict mode,
 which can easily cause data loss. These problems are documented in
 [DataLossTest](https://github.com/wvanbergen/activerecord-databasevalidations/blob/master/test/data_loss_test.rb)
 
+Should be thread-safe. Please submit an issue or PR if you can prove otherwise.
+
 ## Installation
 
 Add this line to your application's Gemfile:

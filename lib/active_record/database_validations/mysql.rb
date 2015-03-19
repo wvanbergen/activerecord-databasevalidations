@@ -18,17 +18,14 @@ module ActiveRecord
       }
 
       def self.column_size_limit(column)
-        @column_size_limit ||= {}
-        @column_size_limit[column] ||= begin
-          column_type = column.sql_type.sub(/\(.*\z/, '').gsub(/\s/, '_').to_sym
-          type_limit  = TYPE_LIMITS.fetch(column_type, {})
+        column_type = column.sql_type.sub(/\(.*\z/, '').gsub(/\s/, '_').to_sym
+        type_limit  = TYPE_LIMITS.fetch(column_type, {})
 
-          [
-            column.limit || type_limit[:maximum],
-            type_limit[:type],
-            determine_encoding(column),
-          ]
-        end
+        [
+          column.limit || type_limit[:maximum],
+          type_limit[:type],
+          determine_encoding(column),
+        ]
       end
 
       def self.column_range(column)
