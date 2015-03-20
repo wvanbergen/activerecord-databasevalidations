@@ -18,6 +18,8 @@ module DataLossAssertions
 
     persisted_values = record.reload.attributes.slice(*attributes)
     refute_equal provided_values, persisted_values
+  rescue RangeError
+    pass
   end
 
   def refute_data_loss(record)

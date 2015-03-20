@@ -8,6 +8,7 @@ rvm:
 gemfile:
 - Gemfile.activerecord40
 - Gemfile.activerecord41
+- Gemfile.activerecord42
 
 before_script:
 - mysql -e 'create database database_validations;'
