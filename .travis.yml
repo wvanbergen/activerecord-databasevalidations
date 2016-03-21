@@ -24,8 +24,5 @@ matrix:
     - rvm: 2.1.8
       gemfile: Gemfile.activerecord50
 
-  allow_failures:
-    - gemfile: Gemfile.activerecord50
-
 before_script:
 - mysql -e 'create database database_validations;'
