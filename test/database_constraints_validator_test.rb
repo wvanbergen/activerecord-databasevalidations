@@ -159,7 +159,7 @@ class DatabaseConstraintsValidatorTest < Minitest::Test
   def test_integer_range
     subvalidators = Num._validators[:bigint].first.attribute_validators(Num, :bigint)
     assert_equal 1, subvalidators.length
-    assert_kind_of ActiveModel::Validations::NumericalityValidator, range_validator = subvalidators.first
+    assert_kind_of ActiveModel::Validations::NumericalityValidator, subvalidators.first
 
     inside_upper_bound = Num.new(tinyint: 127)
     assert inside_upper_bound.valid?
@@ -181,7 +181,7 @@ class DatabaseConstraintsValidatorTest < Minitest::Test
   def unsigned_integer_range
     subvalidators = Num._validators[:unsigned_int].first.attribute_validators(Num, :unsigned_int)
     assert_equal 1, subvalidators.length
-    assert_kind_of ActiveModel::Validations::NumericalityValidator, range_validator = subvalidators.first
+    assert_kind_of ActiveModel::Validations::NumericalityValidator, subvalidators.first
 
     inside_upper_bound = Num.new(unsigned_int: 4_294_967_295)
     assert inside_upper_bound.valid?

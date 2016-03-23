@@ -50,6 +50,7 @@ module ActiveRecord
       end
 
       def self.determine_encoding(column)
+        column = ActiveRecord::Validations::TypedColumn.new(column)
         return nil unless column.text?
         case column.collation
           when /\Autf8/; Encoding::UTF_8
