@@ -75,9 +75,9 @@ module ActiveRecord
         end
       end
 
-      def validate_each(record, attribute, value)
+      def validate_each(record, attribute, _value)
         attribute_validators(record.class, attribute).each do |validator|
-          validator.validate_each(record, attribute, value)
+          validator.validate(record)
         end
       end
     end
