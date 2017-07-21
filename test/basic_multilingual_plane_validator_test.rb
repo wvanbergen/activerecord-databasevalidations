@@ -40,4 +40,15 @@ class BasicMultilingualPlaneValidatorTest < Minitest::Test
     @model.unicode = 'ü'.encode('ISO-8859-15')
     assert @model.valid?
   end
+
+  def test_utf8mb3_japanese
+    @model.unicode = 'これは普通なストリングです'
+    assert @model.valid?
+  end
+
+  def test_utf8mb4_kanji
+    @model.unicode = '𠜎𠜱𠝹𠱓𠱸𠲖𠳏𠳕𠴕𠵼𠵿𠸎𠸏𠹷'
+    assert @model.invalid?
+    assert_equal ["contains characters outside Unicode's basic multilingual plane"], @model.errors[:unicode]
+  end
 end
