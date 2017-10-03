@@ -17,6 +17,8 @@ ActiveRecord::Migration.suppress_messages do
     t.string   :mb4_string
   end
 
+  ActiveRecord::Migration.create_table("empties", force: true)
+
   ActiveRecord::Migration.create_table("nums", force: true) do |t|
     t.column :decimal,          "DECIMAL(5,2)"
     t.column :unsigned_decimal, "DECIMAL(5,2) UNSIGNED"
@@ -39,6 +41,12 @@ class Bar < ActiveRecord::Base
   validates :mb4_string, database_constraints: :basic_multilingual_plane
 end
 
+class Empty < ActiveRecord::Base
+  attr_accessor :not_a_column
+
+  validates(:not_a_column, database_constraints: [:size])
+end
+
 class Num < ActiveRecord::Base
   validates :decimal, :unsigned_decimal, :tinyint, :smallint, :mediumint, :int, :bigint, :unsigned_int, database_constraints: :range
 end
@@ -51,6 +59,11 @@ class DatabaseConstraintsValidatorTest < Minitest::Test
     assert_raises(ArgumentError) { Bar.validates(:mb4_string, database_constraints: true) }
     assert_raises(ArgumentError) { Bar.validates(:mb4_string, database_constraints: :bogus) }
     assert_raises(ArgumentError) { Bar.validates(:mb4_string, database_constraints: [:size, :bogus]) }
+  end
+
+  def test_column_validation
+    exception = assert_raises(ArgumentError) { Empty.new.valid? }
+    assert_equal "Model Empty does not have column not_a_column!", exception.message
   end
 
   def test_validators_are_defined
