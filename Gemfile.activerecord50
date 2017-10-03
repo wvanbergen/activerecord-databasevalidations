@@ -1,4 +1,4 @@
 source 'https://rubygems.org'
 gemspec
 
-gem 'activerecord', github: 'rails/rails'
+gem 'activerecord', '~> 5.0.0'
