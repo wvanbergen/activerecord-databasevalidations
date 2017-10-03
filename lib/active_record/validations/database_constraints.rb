@@ -63,8 +63,13 @@ module ActiveRecord
 
       def attribute_validators(klass, attribute)
         @constraint_validators[attribute] ||= begin
-          column = klass.columns_hash[attribute.to_s] or raise ArgumentError.new("Model #{self.class.name} does not have column #{column_name}!")
-          column = ActiveRecord::Validations::TypedColumn.new(column)
+          column_definition = klass.columns_hash[attribute.to_s]
+
+          unless column_definition
+            raise ArgumentError.new("Model #{klass.name} does not have column #{attribute.to_s}!")
+          end
+
+          column = ActiveRecord::Validations::TypedColumn.new(column_definition)
 
           [
             not_null_validator(klass, column),
