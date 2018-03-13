@@ -8,18 +8,18 @@ rvm:
 - 2.3.0
 
 gemfile:
-- Gemfile.activerecord40
-- Gemfile.activerecord41
-- Gemfile.activerecord42
-- Gemfile.activerecord50
-- Gemfile.activerecord51
+  - gemfiles/Gemfile.activerecord40
+  - gemfiles/Gemfile.activerecord41
+  - gemfiles/Gemfile.activerecord42
+  - gemfiles/Gemfile.activerecord50
+  - gemfiles/Gemfile.activerecord51
 
 matrix:
   exclude:
     - rvm: 2.1.8
-      gemfile: Gemfile.activerecord50
+      gemfile: gemfiles/Gemfile.activerecord50
     - rvm: 2.1.8
-      gemfile: Gemfile.activerecord51
+      gemfile: gemfiles/Gemfile.activerecord51
 
 before_script:
 - mysql -e 'create database database_validations;'
