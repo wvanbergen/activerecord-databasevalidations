@@ -3,23 +3,23 @@ language: ruby
 cache: bundler
 
 rvm:
-- 2.1.8
-- 2.2.4
+- 2.2.2
 - 2.3.0
+- 2.4.1
+- 2.5.0
 
 gemfile:
-- Gemfile.activerecord40
-- Gemfile.activerecord41
-- Gemfile.activerecord42
-- Gemfile.activerecord50
-- Gemfile.activerecord51
+  - gemfiles/Gemfile.activerecord50
+  - gemfiles/Gemfile.activerecord51
+  - gemfiles/Gemfile.activerecord52
+  - gemfiles/Gemfile.activerecord-edge
 
 matrix:
   exclude:
-    - rvm: 2.1.8
-      gemfile: Gemfile.activerecord50
-    - rvm: 2.1.8
-      gemfile: Gemfile.activerecord51
+    - rvm: 2.2.2
+      gemfile: gemfiles/Gemfile.activerecord-edge
+    - rvm: 2.3.0
+      gemfile: gemfiles/Gemfile.activerecord-edge
 
 before_script:
 - mysql -e 'create database database_validations;'
