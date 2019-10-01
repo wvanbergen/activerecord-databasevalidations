@@ -98,7 +98,7 @@ class DatabaseConstraintsValidatorTest < Minitest::Test
     assert_equal 1, subvalidators.length
     assert_kind_of ActiveModel::Validations::BytesizeValidator, subvalidators.first
     assert_equal 65535, subvalidators.first.options[:maximum]
-    assert_equal nil, subvalidators.first.encoding
+    assert_nil subvalidators.first.encoding
   end
 
   def test_not_null_text_field_defines_requested_bytesize_validator_and_unicode_validator
@@ -120,7 +120,7 @@ class DatabaseConstraintsValidatorTest < Minitest::Test
 
   def test_should_not_create_a_validator_for_a_utf8mb4_field
     assert Bar._validators[:mb4_string].first.attribute_validators(Bar, :mb4_string).empty?
-    emoji = Bar.new(mb4_string: '💩')
+    emoji = Bar.new(mb4_string: '')
     assert emoji.valid?
     refute_data_loss emoji
   end
@@ -214,7 +214,7 @@ class DatabaseConstraintsValidatorTest < Minitest::Test
   end
 
   def test_error_messages
-    foo = Foo.new(string: 'ü' * 41, checked: nil, not_null_text: '💩')
+    foo = Foo.new(string: 'ü' * 41, checked: nil, not_null_text: '')
     refute foo.save
 
     assert_equal ["is too long (maximum is 40 characters)"], foo.errors[:string]

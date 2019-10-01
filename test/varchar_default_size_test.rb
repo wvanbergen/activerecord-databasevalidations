@@ -14,7 +14,7 @@ class VarcharDefaultSizeTest < Minitest::Test
       ActiveRecord::Migration.add_index(:varchars, :string, unique: true)
     end
 
-    assert_match /\Autf8mb4_/, Varchar.columns_hash['string'].collation
-    assert_equal 191, Varchar.columns_hash['string'].limit
+    assert_match(/\Autf8mb4_/, Varchar.columns_hash['string'].collation)
+    assert_equal(191, Varchar.columns_hash['string'].limit)
   end
 end
