@@ -214,7 +214,7 @@ class DatabaseConstraintsValidatorTest < Minitest::Test
   end
 
   def test_error_messages
-    foo = Foo.new(string: 'ü' * 41, checked: nil, not_null_text: '')
+    foo = Foo.new(string: 'ü' * 41, checked: nil, not_null_text: "\u{1F4A9}")
     refute foo.save
 
     assert_equal ["is too long (maximum is 40 characters)"], foo.errors[:string]
