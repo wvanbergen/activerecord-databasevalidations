@@ -64,8 +64,12 @@ module ActiveRecord
 
       def self.value_for_column(value, column_encoding = nil)
         value = value.to_s unless value.is_a?(String)
-        value.encode!('utf-8') if requires_transcoding?(value, column_encoding)
-        return value
+
+        if requires_transcoding?(value, column_encoding)
+          return value.encode(Encoding::UTF_8)
+        end
+
+        value
       end
     end
   end
