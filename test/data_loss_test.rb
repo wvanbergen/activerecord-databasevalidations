@@ -33,8 +33,8 @@ class DataLossTest < Minitest::Test
   end
 
   def test_decimal_silently_changes_out_of_bound_values
-    maximum = BigDecimal.new(10 **  (Unicorn.columns_hash['decimal'].precision - Unicorn.columns_hash['decimal'].scale))
-    delta   = BigDecimal.new(10 ** -(Unicorn.columns_hash['decimal'].scale), Unicorn.columns_hash['decimal'].precision)
+    maximum = BigDecimal(10 **  (Unicorn.columns_hash['decimal'].precision - Unicorn.columns_hash['decimal'].scale))
+    delta   = BigDecimal(10 ** -(Unicorn.columns_hash['decimal'].scale), Unicorn.columns_hash['decimal'].precision)
 
     refute_data_loss Unicorn.new(decimal: maximum - delta)
     assert_data_loss Unicorn.new(decimal: maximum)
@@ -42,8 +42,8 @@ class DataLossTest < Minitest::Test
     assert_data_loss Unicorn.new(decimal: 0 - maximum)
 
 
-    maximum = BigDecimal.new(10 **  (Unicorn.columns_hash['unsigned_decimal'].precision - Unicorn.columns_hash['unsigned_decimal'].scale))
-    delta   = BigDecimal.new(10 ** -(Unicorn.columns_hash['unsigned_decimal'].scale), Unicorn.columns_hash['unsigned_decimal'].precision)
+    maximum = BigDecimal(10 **  (Unicorn.columns_hash['unsigned_decimal'].precision - Unicorn.columns_hash['unsigned_decimal'].scale))
+    delta   = BigDecimal(10 ** -(Unicorn.columns_hash['unsigned_decimal'].scale), Unicorn.columns_hash['unsigned_decimal'].precision)
 
     refute_data_loss Unicorn.new(unsigned_decimal: maximum - delta)
     assert_data_loss Unicorn.new(unsigned_decimal: maximum)
@@ -99,7 +99,7 @@ class DataLossTest < Minitest::Test
   end
 
   def test_utf8mb3_field_sliently_truncates_strings_after_first_4byte_character
-    emoji = '💩'
+    emoji = "\u{1F4A9}"
     assert_equal 1, emoji.length
     assert_equal 4, emoji.bytesize
     assert_data_loss Unicorn.new(string: emoji)
