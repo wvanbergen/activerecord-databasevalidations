@@ -1,3 +1,7 @@
+# 0.5.1 (May 22, 2020)
+
+* Fix various Ruby 2.7 warnings
+
 # 0.4.0 (March 20, 2018)
 
 * Rails 5.2 support
