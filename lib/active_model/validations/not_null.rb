@@ -6,7 +6,7 @@ module ActiveModel
           errors_options = options.except(:must_be_set)
           default_message = options[:must_be_set]
           errors_options[:message] ||= default_message if default_message
-          record.errors.add(attribute, :must_be_set, errors_options)
+          record.errors.add(attribute, :must_be_set, **errors_options)
         end
       end
     end

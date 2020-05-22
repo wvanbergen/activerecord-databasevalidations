@@ -22,7 +22,7 @@ module ActiveModel
           default_message = options[:too_many_bytes]
           errors_options[:count] = options[:maximum]
           errors_options[:message] ||= default_message if default_message
-          record.errors.add(attribute, :too_many_bytes, errors_options)
+          record.errors.add(attribute, :too_many_bytes, **errors_options)
         end
       end
     end

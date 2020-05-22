@@ -13,7 +13,7 @@ module ActiveModel
           errors_options = options.except(:characters_outside_basic_multilingual_plane)
           default_message = options[:characters_outside_basic_multilingual_plane]
           errors_options[:message] ||= default_message if default_message
-          record.errors.add(attribute, :characters_outside_basic_multilingual_plane, errors_options)
+          record.errors.add(attribute, :characters_outside_basic_multilingual_plane, **errors_options)
         end
       end
     end
